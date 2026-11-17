@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { INCIDENT_TYPES, NEED_OPTIONS, NEXT_UPDATE_OPTIONS, toTimeValue, formatHeader, formatIncident, formatNextUpdate, formatSummary, isBlank } from './format.js';
+import { ICE_OPTIONS, INCIDENT_TYPES, NEED_OPTIONS, NEXT_UPDATE_OPTIONS, toTimeValue, formatHeader, formatIncident, formatNextUpdate, formatSummary, isBlank } from './format.js';
 
 // Random IDs rather than a module-level counter: a counter resets on hot
 // reload while existing incidents are kept, which can produce duplicate IDs.
@@ -13,6 +13,8 @@ const newIncident = () => ({
   doing: '',
   need: 'help',
   helpNeeded: '',
+  ice: 'present',
+  iceDetails: '',
   type: 'responding',
 });
 
@@ -129,6 +131,31 @@ export default function App() {
                 onChange={(e) => update(inc.id, 'reported', e.target.value)}
               />
             </label>
+            {inc.type === 'closed' ? (
+              <div className="row row-ice">
+                <label>
+                  ICE present?
+                  <select
+                    value={inc.ice}
+                    onChange={(e) => update(inc.id, 'ice', e.target.value)}
+                  >
+                    {ICE_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  More details
+                  <input
+                    value={inc.iceDetails}
+                    onChange={(e) => update(inc.id, 'iceDetails', e.target.value)}
+                  />
+                </label>
+              </div>
+            ) : (
+            <>
             <div className="row row-2">
               <label>
                 What we're doing
@@ -160,6 +187,8 @@ export default function App() {
                   onChange={(e) => update(inc.id, 'helpNeeded', e.target.value)}
                 />
               </label>
+            )}
+            </>
             )}
             {incidents.length > 1 && (
               <button

@@ -83,6 +83,7 @@ button.remove {
 }
 .incident .row input { min-width: 0; }
 .incident .row-2 { grid-template-columns: 1fr auto; }
+.incident .row-ice { grid-template-columns: auto 1fr; }
 @media (max-width: 480px) {
   .incident .row { grid-template-columns: 1fr; }
 }

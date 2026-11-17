@@ -2,6 +2,13 @@ export const INCIDENT_TYPES = [
   { value: 'responding', label: 'Responding', emoji: '🚨' },
   { value: 'active', label: 'Active Incident', emoji: '🔥' },
   { value: 'info', label: 'Info-gathering', emoji: '🕵️' },
+  { value: 'closed', label: 'Closed', emoji: '📁' },
+];
+
+export const ICE_OPTIONS = [
+  { value: 'present', label: '🥶 ICE present' },
+  { value: 'unconfirmed', label: '🤷🏻 Unconfirmed' },
+  { value: 'false', label: '❌ False alarm' },
 ];
 
 export const NEED_OPTIONS = [
@@ -13,11 +20,16 @@ const emojiFor = (type) =>
   INCIDENT_TYPES.find((t) => t.value === type)?.emoji ?? '';
 
 // Template: {TOWN} – {PLACE} {TYPE} {SIGNAL LINK}
-export function formatIncident({ town, place, type, link, reported, doing, need, helpNeeded }) {
+export function formatIncident({ town, place, type, link, reported, doing, need, helpNeeded, ice, iceDetails }) {
   const lines = [
     `${emojiFor(type)} ${town.trim().toUpperCase()} – ${place.trim()} ${emojiFor(type)} ${link.trim()}`.trim(),
   ];
   if (reported.trim()) lines.push(`👀 ${reported.trim()}`);
+  if (type === 'closed') {
+    lines.push(ICE_OPTIONS.find((o) => o.value === ice)?.label ?? '');
+    if (iceDetails.trim()) lines.push(iceDetails.trim());
+    return lines.join('\n');
+  }
   if (doing.trim()) lines.push(`🏃 ${doing.trim()}`);
   if (need === 'help') {
     lines.push(`🆘 ${helpNeeded.trim() || 'More help needed'}`);
@@ -27,8 +39,8 @@ export function formatIncident({ town, place, type, link, reported, doing, need,
   return lines.join('\n');
 }
 
-export function isBlank({ town, place, link, reported, doing }) {
-  return [town, place, link, reported, doing].every((v) => !v.trim());
+export function isBlank({ town, place, link, reported, doing, iceDetails }) {
+  return [town, place, link, reported, doing, iceDetails].every((v) => !v.trim());
 }
 
 // Header: 🚨 STATUS UPDATE – {DAY} {DATE}, {TIME}
