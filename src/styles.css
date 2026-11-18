@@ -75,7 +75,7 @@ h1 { font-size: 1.2rem; margin: 0 0 16px; }
 .incident legend { font-weight: 600; padding: 0 4px; }
 
 label { display: grid; gap: 4px; font-size: 0.9rem; font-weight: 500; }
-input, select {
+input, select, textarea {
   font: inherit;
   padding: 8px 10px;
   border: 1px solid #c8ccd2;
@@ -133,3 +133,6 @@ button.remove {
   gap: 10px;
   margin-bottom: 24px;
 }
+
+.stack { display: grid; gap: 10px; }
+textarea { resize: vertical; }

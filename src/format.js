@@ -92,3 +92,18 @@ export function formatNextUpdate(date, timeValue, minutes) {
   next.setMinutes(next.getMinutes() + minutes);
   return `Next Update by ${formatTime(next)}`;
 }
+
+// Response Request: header, map link, details, then the call to action,
+// each separated by a blank line. Empty until a field is filled in.
+export function formatResponseRequest({ details, mapLink }) {
+  if (!mapLink.trim() && !details.trim()) return '';
+  return [
+    '‼️ RAPID RESPONSE NEEDED ‼️',
+    mapLink.trim(),
+    details.trim() && `👀 ${details.trim()}`,
+    'If you can get there in 15 minutes or less, please respond with an ETA and wait for confirmation before leaving.',
+    'Please:\n🤐 do not share any dispatch information outside of FD\n🪪 only respond if you have a lanyard',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+}

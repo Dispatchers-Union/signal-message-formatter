@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import OutputPanel from './OutputPanel.jsx';
 import { ICE_OPTIONS, INCIDENT_TYPES, NEED_OPTIONS, NEXT_UPDATE_OPTIONS, toTimeValue, formatHeader, formatIncident, formatNextUpdate, formatSummary, isBlank } from './format.js';
 
 // Random IDs rather than a module-level counter: a counter resets on hot
@@ -20,7 +21,6 @@ const newIncident = () => ({
 
 export default function IncidentWrangler() {
   const [incidents, setIncidents] = useState(() => [newIncident()]);
-  const [copied, setCopied] = useState(false);
   // Only refreshed when a form field changes, not on a timer.
   const [updatedAt, setUpdatedAt] = useState(() => new Date());
   // Once someone types a time, stop overwriting it with the auto time.
@@ -50,11 +50,6 @@ export default function IncidentWrangler() {
         .join('\n\n')
     : '';
 
-  const copy = async () => {
-    await navigator.clipboard.writeText(output);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
 
   return (
     <div className="two-col">
@@ -208,15 +203,10 @@ export default function IncidentWrangler() {
         </button>
       </section>
 
-      <section className="panel output-panel">
-        <div className="output-header">
-          <h1>Formatted message</h1>
-          <button type="button" onClick={copy} disabled={!output}>
-            {copied ? 'Copied!' : 'Copy'}
-          </button>
-        </div>
-        <pre className="output">{output || 'Fill in an incident to see the message.'}</pre>
-      </section>
+      <OutputPanel
+        output={output}
+        placeholder="Fill in an incident to see the message."
+      />
     </div>
   );
 }
