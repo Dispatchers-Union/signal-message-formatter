@@ -118,15 +118,6 @@ export default function App() {
               </label>
             </div>
             <label>
-              Signal Link
-              <input
-                type="url"
-                value={inc.link}
-                placeholder="https://signal.group/…"
-                onChange={(e) => update(inc.id, 'link', e.target.value)}
-              />
-            </label>
-            <label>
               What was reported
               <input
                 value={inc.reported}
@@ -192,6 +183,15 @@ export default function App() {
             )}
             </>
             )}
+            <label>
+              Signal Link
+              <input
+                type="url"
+                value={inc.link}
+                placeholder="https://signal.group/…"
+                onChange={(e) => update(inc.id, 'link', e.target.value)}
+              />
+            </label>
             {incidents.length > 1 && (
               <button
                 type="button"

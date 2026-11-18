@@ -19,23 +19,24 @@ export const NEED_OPTIONS = [
 const emojiFor = (type) =>
   INCIDENT_TYPES.find((t) => t.value === type)?.emoji ?? '';
 
-// Template: {TOWN} – {PLACE} {TYPE} {SIGNAL LINK}
+// First line: {TYPE} {TOWN} – {PLACE} {TYPE}; the Signal link goes last.
 export function formatIncident({ town, place, type, link, reported, doing, need, helpNeeded, ice, iceDetails }) {
   const lines = [
-    `${emojiFor(type)} ${town.trim().toUpperCase()} – ${place.trim()} ${emojiFor(type)} ${link.trim()}`.trim(),
+    `${emojiFor(type)} ${town.trim().toUpperCase()} – ${place.trim()} ${emojiFor(type)}`.trim(),
   ];
   if (reported.trim()) lines.push(`👀 ${reported.trim()}`);
   if (type === 'closed') {
     lines.push(ICE_OPTIONS.find((o) => o.value === ice)?.label ?? '');
     if (iceDetails.trim()) lines.push(iceDetails.trim());
-    return lines.join('\n');
-  }
-  if (doing.trim()) lines.push(`🏃 ${doing.trim()}`);
-  if (need === 'help') {
-    lines.push(`🆘 ${helpNeeded.trim() || 'More help needed'}`);
   } else {
-    lines.push('🆗 Need is met');
+    if (doing.trim()) lines.push(`🏃 ${doing.trim()}`);
+    if (need === 'help') {
+      lines.push(`🆘 ${helpNeeded.trim() || 'More help needed'}`);
+    } else {
+      lines.push('🆗 Need is met');
+    }
   }
+  if (link.trim()) lines.push(link.trim());
   return lines.join('\n');
 }
 
