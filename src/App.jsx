@@ -45,7 +45,9 @@ export default function App() {
         formatSummary(filled),
         ...filled.map(formatIncident),
         formatNextUpdate(updatedAt, time, nextUpdate),
-      ].join('\n\n')
+      ]
+        .filter(Boolean) // drop the summary when it's empty (e.g. only closed incidents)
+        .join('\n\n')
     : '';
 
   const copy = async () => {
