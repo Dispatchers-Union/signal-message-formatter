@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import IncidentChecklist from './IncidentChecklist.jsx';
+import { CHECKLIST_IDS } from './checklistItems.jsx';
 import OutputPanel from './OutputPanel.jsx';
+import { buildShareLink, clearShareData, readShareData } from './share.js';
 import { ICE_OPTIONS, INCIDENT_TYPES, NEED_OPTIONS, NEXT_UPDATE_OPTIONS, toTimeValue, formatHeader, formatIncident, formatNextUpdate, formatSummary, isBlank } from './format.js';
 
 // Random IDs rather than a module-level counter: a counter resets on hot
@@ -17,16 +20,83 @@ const newIncident = () => ({
   ice: 'present',
   iceDetails: '',
   type: 'responding',
+  checklist: [], // ids of completed checklist items
 });
 
+const allowed = (list) => new Set(list.map((o) => o.value));
+const ENUMS = {
+  type: allowed(INCIDENT_TYPES),
+  need: allowed(NEED_OPTIONS),
+  ice: allowed(ICE_OPTIONS),
+};
+
+// Turn untrusted shared data into clean incidents: only known fields, only
+// strings, only valid dropdown values. Anything else falls back to defaults.
+function incidentsFromShare(data) {
+  if (!Array.isArray(data?.incidents) || !data.incidents.length) return null;
+  return data.incidents.map((raw) => {
+    const inc = newIncident();
+    for (const key of Object.keys(inc)) {
+      if (key === 'checklist') {
+        if (Array.isArray(raw?.checklist)) {
+          inc.checklist = [...new Set(raw.checklist.filter((id) => CHECKLIST_IDS.has(id)))];
+        }
+        continue;
+      }
+      if (key === 'id' || typeof raw?.[key] !== 'string') continue;
+      if (ENUMS[key] && !ENUMS[key].has(raw[key])) continue;
+      inc[key] = raw[key];
+    }
+    return inc;
+  });
+}
+
+function nextUpdateFromShare(data) {
+  return NEXT_UPDATE_OPTIONS.some((o) => o.minutes === data?.nextUpdate)
+    ? data.nextUpdate
+    : NEXT_UPDATE_OPTIONS[0].minutes;
+}
+
 export default function IncidentWrangler() {
-  const [incidents, setIncidents] = useState(() => [newIncident()]);
+  // Seed from a share link if the page was opened with one.
+  const [seed] = useState(() => readShareData());
+  const [incidents, setIncidents] = useState(
+    () => incidentsFromShare(seed) ?? [newIncident()]
+  );
   // Only refreshed when a form field changes, not on a timer.
   const [updatedAt, setUpdatedAt] = useState(() => new Date());
   // Once someone types a time, stop overwriting it with the auto time.
   const [manualTime, setManualTime] = useState(null);
-  const [nextUpdate, setNextUpdate] = useState(NEXT_UPDATE_OPTIONS[0].minutes);
+  const [nextUpdate, setNextUpdate] = useState(() => nextUpdateFromShare(seed));
   const time = manualTime ?? toTimeValue(updatedAt);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  // Remove the share data from the address bar once loaded, so a refresh
+  // doesn't wipe edits. Also pick up a share link pasted into an open tab.
+  useEffect(() => {
+    if (seed) clearShareData();
+    const onHashChange = () => {
+      const data = readShareData();
+      const shared = incidentsFromShare(data);
+      if (!shared) return;
+      setIncidents(shared);
+      setNextUpdate(nextUpdateFromShare(data));
+      setUpdatedAt(new Date());
+      clearShareData();
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, [seed]);
+
+  const copyShareLink = async () => {
+    const link = buildShareLink({
+      nextUpdate,
+      incidents: incidents.map(({ id, ...fields }) => fields),
+    });
+    await navigator.clipboard.writeText(link);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 1500);
+  };
 
   const update = (id, field, value) => {
     setUpdatedAt(new Date());
@@ -34,6 +104,20 @@ export default function IncidentWrangler() {
       list.map((inc) => (inc.id === id ? { ...inc, [field]: value } : inc))
     );
   };
+  // Checklist progress isn't part of the message, so it doesn't bump the time.
+  const toggleChecklist = (id, item) =>
+    setIncidents((list) =>
+      list.map((inc) =>
+        inc.id !== id
+          ? inc
+          : {
+              ...inc,
+              checklist: (inc.checklist ?? []).includes(item)
+                ? inc.checklist.filter((x) => x !== item)
+                : [...(inc.checklist ?? []), item],
+            }
+      )
+    );
   const add = () => setIncidents((list) => [...list, newIncident()]);
   const remove = (id) =>
     setIncidents((list) => list.filter((inc) => inc.id !== id));
@@ -196,11 +280,23 @@ export default function IncidentWrangler() {
                 Remove
               </button>
             )}
+            <IncidentChecklist
+              checked={inc.checklist}
+              onToggle={(item) => toggleChecklist(inc.id, item)}
+            />
           </fieldset>
         ))}
         <button type="button" className="add" onClick={add}>
           + Add incident
         </button>
+        <div className="share">
+          <button type="button" className="secondary" onClick={copyShareLink}>
+            {linkCopied ? 'Link copied!' : 'Copy share link'}
+          </button>
+          <p className="hint">
+            Send this link to someone to fill their form with these incidents.
+          </p>
+        </div>
       </section>
 
       <OutputPanel
