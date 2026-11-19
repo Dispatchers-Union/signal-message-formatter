@@ -107,3 +107,44 @@ export function formatResponseRequest({ details, mapLink }) {
     .filter(Boolean)
     .join('\n\n');
 }
+
+export const INTAKE_TYPES = [
+  'Hotline Call',
+  'WhatsApp Group',
+  'Social Media',
+  'External RRN',
+  'Public Defender/Attorney Request',
+  'Patrols',
+  'Other',
+];
+
+export const REPORT_INCIDENT_TYPES = [
+  'Live event in progress',
+  'past event/ICE confirmed present',
+  'past event/uncertain if ICE present',
+  'False Alarm',
+];
+
+// Only the first two incident types can have a confirmed detention.
+export const allowsDetention = (incidentType) =>
+  REPORT_INCIDENT_TYPES.slice(0, 2).includes(incidentType);
+
+// "HH:MM" -> "3:05 PM"
+const timeLabel = (timeValue) => formatTime(withTime(new Date(), timeValue));
+
+// Incident Report Request: placeholder format until a template is decided.
+export function formatReportRequest({ reportTime, dispatchTime, intakeType, incidentType, detention }) {
+  if (!reportTime && !dispatchTime) return '';
+  const message = [
+    'When you have a moment later today, could you please fill out the Incident Report?\n\nhttps://frontlinedignity.org/volunteers/\n',
+    reportTime && `Time of Report: ${timeLabel(reportTime)}`,
+    dispatchTime && `Time of Dispatch: ${timeLabel(dispatchTime)}`,
+    `Intake Type: ${intakeType}`,
+    `Incident Type: ${incidentType}`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+  return detention && allowsDetention(incidentType)
+    ? `${message}\n\nPlease also add a Detention Report for each detainee: https://frontlinedignity.org/volunteers/detainee-form/`
+    : message;
+}

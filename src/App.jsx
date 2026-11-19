@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import IncidentWrangler from './IncidentWrangler.jsx';
 import ResponseRequest from './ResponseRequest.jsx';
+import ReportRequest from './ReportRequest.jsx';
 
 const TABS = [
   { id: 'incident-wrangler', label: 'Incident Wrangler', Component: IncidentWrangler },
   { id: 'response-request', label: 'Response Request', Component: ResponseRequest },
+  { id: 'report-request', label: 'Incident Report Request', Component: ReportRequest },
 ];
 
 export default function App() {
